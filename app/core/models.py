@@ -1,6 +1,9 @@
 """
 Database models.
 """
+from django.utils.crypto import get_random_string
+from django.shortcuts import get_object_or_404
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -42,3 +45,46 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     USERNAME_FIELD = 'email'
+
+def get_default_horse():
+    return Horse.objects.first()
+
+def get_default_user():
+    return User.objects.first()
+
+def get_horse(api_key):
+    return get_object_or_404(Horse, api_key=api_key)
+
+class Horse(models.Model):
+    """Horse object."""
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE
+    )
+    name = models.CharField(max_length=255)
+    api_key = models.CharField(max_length=12, unique=True, default=get_random_string(length=12))
+
+    def __str__(self):
+        return self.api_key
+    
+class DataPoint(models.Model):
+    """Data point for horse data."""
+    api_key = models.ForeignKey(Horse, 
+                                on_delete=models.CASCADE, 
+                                to_field='api_key', 
+                                default=get_default_horse)
+    @property
+    def user(self):
+        return self.api_key.user
+    
+    @property
+    def name(self):
+        return self.api_key.name
+    date_created = models.DateTimeField(auto_now_add=True)
+    gps_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    gps_long = models.DecimalField(max_digits=9, decimal_places=6, null=True)
+    temp = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    hr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    hr_interval = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+
+

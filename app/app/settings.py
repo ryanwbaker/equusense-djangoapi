@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drf_spectacular',
     'user',
+    'horse',
 ]
 
 MIDDLEWARE = [
@@ -136,4 +137,10 @@ AUTH_USER_MODEL = 'core.User'
 
 REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_AUTHENTICATION_CLASSES':[
+        'horse.custom_authentication.CustomAuthentication'
+    ],
+    'DEFAULT_PERMISSION_CLASSES':[
+        'horse.custom_permission.CustomPermission'
+    ]
 }
