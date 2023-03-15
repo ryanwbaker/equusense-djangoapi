@@ -65,7 +65,7 @@ class Horse(models.Model):
     api_key = models.CharField(max_length=12, unique=True, default=get_random_string(length=12))
 
     def __str__(self):
-        return self.api_key
+        return self.name+" "+self.api_key
     
 class DataPoint(models.Model):
     """Data point for horse data."""

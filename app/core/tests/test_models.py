@@ -66,7 +66,7 @@ class ModelTests(TestCase):
             name='Sample Horse Name'
         )
 
-        self.assertEqual(str(horse), horse.api_key)
+        self.assertEqual(str(horse), horse.name+" "+horse.api_key)
 
     def test_create_data_point(self):
         """Test creating a data point is successful."""
@@ -90,7 +90,7 @@ class ModelTests(TestCase):
             hr=test_data['hr'],
             hr_interval=test_data['hr_interval'],
         )
-        self.assertEqual(str(data_point.api_key), self.horse.api_key)
+        self.assertEqual(data_point.api_key.api_key, self.horse.api_key)
         self.assertEqual(data_point.gps_lat, test_data['gps_lat'])
         self.assertEqual(data_point.gps_long, test_data['gps_long'])
         self.assertEqual(data_point.temp, test_data['temp'])

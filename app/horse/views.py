@@ -9,8 +9,6 @@ from rest_framework import (
 from rest_framework.views import APIView
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .custom_authentication import CustomAuthentication
-from .custom_permission import CustomPermission
 
 from core.models import (
     Horse,
@@ -51,8 +49,8 @@ class DataPointViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
     """Manage data points in the database"""
     serializer_class = serializers.DataPointSerializer
     queryset = DataPoint.objects.all()
-    authentication_classes = [CustomAuthentication]
-    permission_classes = [CustomPermission, IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
         
     def get_queryset(self):
         """Filter queryset to authenticated user."""
