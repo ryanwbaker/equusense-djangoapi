@@ -1,6 +1,11 @@
 """
 Test for horse APIs.
 """
+from decimal import Decimal
+import tempfile
+import os
+
+from PIL import Image
 
 from django.utils.crypto import get_random_string
 from django.contrib.auth import get_user_model
@@ -25,6 +30,10 @@ def detail_url(horse_id):
     return reverse('horse:horse-detail', args=[horse_id])
 
 
+def image_upload_url(horse_id):
+    """Create and return an image upload URL."""
+    return reverse('horse:horse-upload-image', args=[horse_id])
+
 
 def create_horse(user, **params):
     """Create and return a horse."""
@@ -41,6 +50,7 @@ def create_horse(user, **params):
 def create_user(**params):
     """Create and return a new user."""
     return get_user_model().objects.create_user(**params)
+
 
 class PublicHorseAPITests(TestCase):
     """Test unauthenticated API requests."""
@@ -176,4 +186,40 @@ class PrivateHorseAPITests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_404_NOT_FOUND)
         self.assertTrue(Horse.objects.filter(id=horse.id).exists())
 
+
+class ImageUploadTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            'user@example.com',
+            'password123'
+        )
+        self.client.force_authenticate(self.user)
+        self.horse = create_horse(user=self.user)
+
+    def tearDown(self) -> None:
+        self.horse.image.delete()
+
+    def test_upload_image(self):
+        """Test uploading an image to a horse."""
+        url = image_upload_url(self.horse.id)
+        with tempfile.NamedTemporaryFile(suffix='.jpg') as image_file:
+            img = Image.new('RGB', (10,10))
+            img.save(image_file, format='JPEG')
+            image_file.seek(0)
+            payload = {'image': image_file}
+            res = self.client.post(url, payload, format='multipart')
+        
+        self.horse.refresh_from_db()
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertIn('image', res.data)
+        self.assertTrue(os.path.exists(self.horse.image.path))
+
+    def test_upload_image_bad_request(self):
+        """Test uploading invalid image."""
+        url = image_upload_url(self.horse.id)
+        payload = {'image':'notanimage'}
+        res = self.client.post(url, payload, format='multipart')
+
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
 

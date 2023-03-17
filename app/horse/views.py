@@ -4,11 +4,12 @@ Views for the horse APIs.
 from rest_framework import (
     viewsets,
     mixins,
-    permissions,
+    status,
 )
-from rest_framework.views import APIView
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 
 from core.models import (
     Horse,
@@ -38,6 +39,8 @@ class HorseViewSet(viewsets.ModelViewSet):
         """Return the serializer class for request."""
         if self.action == 'list':
             return serializers.HorseSerializer
+        elif self.action == 'upload_image':
+            return serializers.HorseImageSerializer
         
         return self.serializer_class
     
@@ -45,7 +48,22 @@ class HorseViewSet(viewsets.ModelViewSet):
         """Create a new horse."""
         serializer.save(user=self.request.user)
 
-class DataPointViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    @action(methods=['POST'], detail=True, url_path='upload-image')
+    def upload_image(self, request, pk=None):
+        horse = self.get_object()
+        serializer = self.get_serializer(horse, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DataPointViewSet(mixins.CreateModelMixin,
+                       mixins.UpdateModelMixin,
+                       mixins.ListModelMixin, 
+                       mixins.DestroyModelMixin,
+                       viewsets.GenericViewSet):
     """Manage data points in the database"""
     serializer_class = serializers.DataPointSerializer
     queryset = DataPoint.objects.all()
@@ -54,16 +72,11 @@ class DataPointViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
         
     def get_queryset(self):
         """Filter queryset to authenticated user."""
-        return self.queryset.filter(user=self.request.user).order_by('-name')
+        return self.queryset.filter(user=self.request.user).order_by('-id')
     
     def perform_create(self, serializer):
         # Get the horse associated with the API key
         horse = get_horse_from_api_key(self.request.data['api_key'])
 
         # Populate the user field with the user of the horse
-        serializer.save(user=horse.user, api_key=horse)
-
-    def get_permissions(self):
-        if self.action == 'create':
-            return[AllowAny()]
-        return [IsAuthenticated()]
+        serializer.save(user=self.request.user, horse=horse)

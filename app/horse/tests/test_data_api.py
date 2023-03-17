@@ -1,5 +1,5 @@
 """
-Tests for the data api
+Tests for the DataPoints API.
 """
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -9,128 +9,139 @@ from django.utils.crypto import get_random_string
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from core.models import DataPoint, Horse
+from core.models import Horse, DataPoint
 
 from horse.serializers import DataPointSerializer
 
 
-DATA_URL = reverse('horse:datapoint-list')
-HORSES_URL = reverse('horse:horse-list')
+DATAPOINT_URL = reverse('horse:datapoint-list')
+
+sample_dps=[
+    {'gps_lat': 123.456789,
+     'gps_long': -123.456789,
+     'temp': 36.4,
+     'hr': 24.1,
+     'hr_interval': 540},
+     {'gps_lat': 345.678901,
+     'gps_long': -345.678901,
+     'temp': 37.4,
+     'hr': 19.9,
+     'hr_interval': 360},
+     {'gps_lat': 456.789012,
+     'gps_long': -456.789012,
+     'temp': 24.5,
+     'hr': 36.2,
+     'hr_interval': 480},
+     {'gps_lat': 567.890123,
+     'gps_long': -567.890123,
+     'temp': 33.2,
+     'hr': 25.6,
+     'hr_interval': 300}
+]
+
+def detail_url(datapoint_id):
+    """Create and return a datapoint url."""
+    return reverse('horse:datapoint-detail', args=[datapoint_id])
 
 def create_user(email='user@example.com', password='testpass123'):
     """Create and return a user."""
     return get_user_model().objects.create_user(email=email, password=password)
 
-def create_horse(user, **params):
-    """Create and return a horse."""
-    defaults = {
-        'name': 'Sample Horse',
-        'api_key': get_random_string(length=12),
-    }
-    defaults.update(params)
+def create_horse(user, name='Sample Horse'):
+    return Horse.objects.create(user=user, name=name, api_key=get_random_string(length=12))
 
-    horse = Horse.objects.create(user=user, **defaults)
-    return horse
+def create_dp(user, horse, data_dict):
+    return DataPoint.objects.create(user=user, horse=horse, **data_dict)
 
-class PublicDataApiTests(TestCase):
+class PublicDataPointApiTests(TestCase):
     """Test unauthenticated API requests."""
     
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_auth_required(self):
+        """Test auth is required for retrieving data points."""
+        res = self.client.get(DATAPOINT_URL)
+
+        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+
+class PrivateDataPointApiTests(TestCase):
+    """Test authenticated API requests."""
+
     def setUp(self):
         self.user = create_user()
         self.client = APIClient()
         self.client.force_authenticate(self.user)
-        self.horse1 = create_horse(self.user)
-        self.horse2 = create_horse(self.user)
-        DataPoint.objects.create(api_key=self.horse1, 
-                                 gps_lat=37.428135, 
-                                 gps_long=-122.079254, 
-                                 temp=36.25, 
-                                 hr=24.6,
-                                 hr_interval=540)
-        DataPoint.objects.create(api_key=self.horse2, 
-                                gps_lat=36.428135, 
-                                gps_long=100.079254, 
-                                temp=34.10, 
-                                hr=25.4,
-                                hr_interval=600)
-        self.client.force_authenticate(user=None)
 
-    def test_auth_required_get(self):
-        """Test auth is required for retrieving Data."""
-        res = self.client.get(DATA_URL)
+    def test_retrieve_datapoints(self):
+        """Test retrieving a list of datapoints."""
+        horse = create_horse(self.user, "Sample horse 1")
+        create_dp(self.user, horse, sample_dps[0])
+        create_dp(self.user, horse, sample_dps[1])
+        res = self.client.get(DATAPOINT_URL)
+        datapoints = DataPoint.objects.all().order_by('-id')
+        serializer = DataPointSerializer(datapoints, many=True)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(res.data, serializer.data)
 
-        self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+    def test_datapoints_limited_to_user(self):
+        """Test list of datapoints limited to authenticated user."""
+        horse1 = create_horse(self.user, "Sample Horse 1")
+        dp_data = [sample_dps[0], sample_dps[1]]
+        dps = []
+        for dp in dp_data:
+            dps.append(create_dp(self.user, horse1, dp))
+        # Note that view returns data in descending ID order
+        # First datapoint in list will be the last one created
+        # reverse the list so API return matches list
+        dp_data.reverse()
+        user2 = create_user(email="user2@example.com")
+        horse2 = create_horse(user=user2, name="test horse 2")
+        create_dp(user2, horse2, sample_dps[1])
+        res = self.client.get(DATAPOINT_URL)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+        self.assertEqual(res.data[0]['api_key'], horse1.api_key)
+        self.assertEqual(res.data[0]['name'], horse1.name)
+        for i, dp in enumerate(dp_data):
+            res_dict = dict(res.data[i])
+            for key, value in dp.items():
+                self.assertEqual(float(res_dict[key]), float(value))
 
-    def test_auth_not_required_api_key_required_post(self):
-        """Test auth is not required but an API key is required to make Data requests."""
-        horse4 = create_horse(self.user)
-        payload = {
-            'gps_lat': 37.428135,
-            'gps_long': -122.079254,
-            'temp': 36.25,
-            'hr': 24.6,
-            'hr_interval': 540,
-            'api_key': str(horse4.api_key),
-        }
-        res = self.client.post(DATA_URL, payload)
+    def test_update_datapoint(self):
+        """Test updating a datapoint."""
+        payload={**sample_dps[2]}
+        horse1 = create_horse(self.user, "Sample Horse 1")
+        dp1 = create_dp(self.user, horse1, sample_dps[0])
+        url = detail_url(dp1.id)
+        res = self.client.patch(url, payload)
+
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        dp1.refresh_from_db()
+        for key, value in sample_dps[2].items():
+            self.assertEqual(getattr(dp1, key).__float__(), float(value))
+
+    def test_delete_datapoint(self):
+        """Test deleting a datapoint."""
+        horse1 = create_horse(self.user, "Sample Horse 1")
+        dp = create_dp(self.user, horse1, sample_dps[0])
+        url = detail_url(dp.id)
+        res = self.client.delete(url)
+
+        self.assertEqual(res.status_code, status.HTTP_204_NO_CONTENT)
+        dps = DataPoint.objects.filter(user=self.user)
+        self.assertFalse(dps.exists())
+
+    def test_create_datapoint(self):
+        """Test creating a datapoint."""
+        horse1 = create_horse(self.user, "Sample Horse 1")
+        payload = {'api_key': horse1.api_key, **sample_dps[0]}
+        res = self.client.post(DATAPOINT_URL, payload)
         self.assertEqual(res.status_code, status.HTTP_201_CREATED)
-
-
-
-
-# class PrivateDataApiTests(TestCase):
-#     """Test authenticated API requests."""
-    
-#     def setUp(self):
-#         self.user = create_user()
-#         self.horse1 = create_horse(self.user)
-#         self.horse2 = create_horse(self.user, name="Sample Horse 2")
-#         self.client = APIClient()
-#         self.client.force_authenticate(self.user)
-
-#     def test_retrieve_data(self):
-#         """Test retrieving data for a given user."""
-#         DataPoint.objects.create(api_key=self.horse1, 
-#                                  gps_lat=37.428135, 
-#                                  gps_long=-122.079254, 
-#                                  temp=36.25, 
-#                                  hr=24.6,
-#                                  hr_interval=540)
-#         DataPoint.objects.create(api_key=self.horse2, 
-#                                 gps_lat=36.428135, 
-#                                 gps_long=100.079254, 
-#                                 temp=34.10, 
-#                                 hr=25.4,
-#                                 hr_interval=600)
-        
-#         res = self.client.get(DATA_URL)
-#         # Specify order of return to be database agnostic
-#         datapoints = DataPoint.objects.all().order_by('-api_key')
-#         serializer = DataPointSerializer(datapoints, many=True)
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(res.data, serializer.data)
-
-#     def data_limited_to_user(self):
-#         user2 = create_user(email='user2@example.com', password='pass123')
-#         horse3 = create_horse(user2, name="Sample Horse 3")
-#         DataPoint.objects.create(api_key=horse3,
-#                                     gps_lat=37.428135, 
-#                                     gps_long=-122.079254, 
-#                                     temp=36.25, 
-#                                     hr=24.6,
-#                                     hr_interval=540)
-        
-#         datapoints = DataPoint.objects.create(api_key=self.horse2,
-#                                             gps_lat=37.428135, 
-#                                             gps_long=-122.079254, 
-#                                             temp=36.25, 
-#                                             hr=24.6,
-#                                             hr_interval=540)
-#         res = self.client.get(DATA_URL)
-#         self.assertEqual(res.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(res.data), 1)
-#         self.assertEqual(res.data[0], datapoints.id)
-
-
-
+        res_data = dict(res.data)
+        for key, value in payload.items():
+            if type(value) is str:
+                self.assertEqual(res_data[key], value)
+            else:
+                self.assertEqual(float(res_data[key]), value)
 

@@ -1,6 +1,9 @@
 """
 Database models.
 """
+import uuid
+import os
+
 from django.utils.crypto import get_random_string
 from django.shortcuts import get_object_or_404
 from django.conf import settings
@@ -11,6 +14,12 @@ from django.contrib.auth.models import (
     PermissionsMixin,
 )
 
+def horse_image_file_path(instance, filename):
+    """Generate file path for new horse image."""
+    ext = os.path.splitext(filename)[1]
+    filename = f'{uuid.uuid4()}{ext}'
+
+    return os.path.join('uploads', 'horse', filename)
 
 class UserManager(BaseUserManager):
     """Manager for users."""
@@ -52,9 +61,6 @@ def get_default_horse():
 def get_default_user():
     return User.objects.first()
 
-def get_horse(api_key):
-    return get_object_or_404(Horse, api_key=api_key)
-
 class Horse(models.Model):
     """Horse object."""
     user = models.ForeignKey(
@@ -63,28 +69,36 @@ class Horse(models.Model):
     )
     name = models.CharField(max_length=255)
     api_key = models.CharField(max_length=12, unique=True, default=get_random_string(length=12))
+    image = models.ImageField(null=True, upload_to=horse_image_file_path)
 
     def __str__(self):
         return self.name+" "+self.api_key
     
 class DataPoint(models.Model):
     """Data point for horse data."""
-    api_key = models.ForeignKey(Horse, 
+    horse = models.ForeignKey(Horse, 
                                 on_delete=models.CASCADE, 
-                                to_field='api_key', 
                                 default=get_default_horse)
     @property
-    def user(self):
-        return self.api_key.user
+    def name(self):
+        return self.horse.name
     
     @property
-    def name(self):
-        return self.api_key.name
+    def api_key(self):
+        return self.horse.api_key
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        default=get_default_user)
     date_created = models.DateTimeField(auto_now_add=True)
     gps_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     gps_long = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     temp = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     hr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     hr_interval = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+
+    def __str__(self):
+        return self.api_key+" "+self.name+" "+str(self.date_created)
 
 

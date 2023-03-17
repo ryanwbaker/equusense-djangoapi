@@ -1,6 +1,7 @@
 """
 Tests for models.
 """
+from unittest.mock import patch
 from decimal import Decimal
 
 from django.test import TestCase
@@ -70,9 +71,9 @@ class ModelTests(TestCase):
 
     def test_create_data_point(self):
         """Test creating a data point is successful."""
-        self.user=create_user()
-        self.horse=models.Horse.objects.create(
-            user=self.user,
+        user=create_user()
+        horse=models.Horse.objects.create(
+            user=user,
             name='Sample Horse Name'
         )
         test_data = {
@@ -83,17 +84,28 @@ class ModelTests(TestCase):
             'hr_interval':300.4,
         }
         data_point = models.DataPoint.objects.create(
-            api_key=self.horse,
+            user = user,
+            horse=horse,
             gps_lat=test_data['gps_lat'],
             gps_long=test_data['gps_long'],
             temp=test_data['temp'],
             hr=test_data['hr'],
             hr_interval=test_data['hr_interval'],
         )
-        self.assertEqual(data_point.api_key.api_key, self.horse.api_key)
+        self.assertEqual(data_point.horse.api_key, horse.api_key)
         self.assertEqual(data_point.gps_lat, test_data['gps_lat'])
         self.assertEqual(data_point.gps_long, test_data['gps_long'])
         self.assertEqual(data_point.temp, test_data['temp'])
         self.assertEqual(data_point.hr, test_data['hr'])
         self.assertEqual(data_point.hr_interval, test_data['hr_interval'])
-        self.assertEqual(data_point.user, self.horse.user)
+        self.assertEqual(data_point.user, horse.user)
+
+    @patch('core.models.uuid.uuid4')
+    def test_horse_file_name_uuid(self, mock_uuid):
+        """Test generating image path."""
+        # Mock uuid simulates filenames and guarantees unique filenames
+        uuid = 'test-uuid'
+        mock_uuid.return_value = uuid
+        file_path = models.horse_image_file_path(None, 'example.jpg')
+
+        self.assertEqual(file_path, f'uploads/horse/{uuid}.jpg')
