@@ -86,6 +86,10 @@ class DataPoint(models.Model):
     @property
     def api_key(self):
         return self.horse.api_key
+    
+    @property
+    def image(self):
+        return self.horse.image
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
