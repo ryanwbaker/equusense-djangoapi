@@ -11,7 +11,6 @@ from core.models import (
 
 class HorseSerializer(serializers.ModelSerializer):
     """Serializer for horses."""
-
     class Meta:
         model = Horse
         fields = ['id', 'name', 'api_key', 'image']
@@ -19,11 +18,13 @@ class HorseSerializer(serializers.ModelSerializer):
 
 class DataPointSerializer(serializers.ModelSerializer):
     """Serializer for data points."""
+    api_key = serializers.CharField(source='horse.api_key')
+    horse_name = serializers.CharField(source='horse.name', read_only=True)
 
-    class Meta(HorseSerializer.Meta):
+    class Meta:
         model = DataPoint
-        fields = HorseSerializer.Meta.fields + ['id', 'date_created', 'gps_lat', 'gps_long', 'temp', 'hr', 'hr_interval']
-        read_only_fields = ['id']
+        fields = ['id', 'api_key', 'horse_name', 'hr', 'hr_interval','date_created', 'gps_lat', 'gps_long', 'temp', 'batt']
+        read_only_fields = ['id', 'api_key', 'horse_name']
 
 class HorseDetailSerializer(HorseSerializer):
     """Serializer for horse detail view."""

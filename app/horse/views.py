@@ -5,17 +5,24 @@ from rest_framework import (
     viewsets,
     mixins,
     status,
+    filters,
 )
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import (
+    DjangoFilterBackend,
+    DateFromToRangeFilter
+)
 
 from core.models import (
     Horse,
     DataPoint,
 )
+
 from horse import serializers
+from horse.filters import DataPointFilter
 
 def get_horse_from_api_key(api_key):
     try:
@@ -69,6 +76,8 @@ class DataPointViewSet(mixins.CreateModelMixin,
     queryset = DataPoint.objects.all()
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
+    filter_backends = [filters.SearchFilter, DjangoFilterBackend]
+    filterset_class = DataPointFilter
         
     def get_queryset(self):
         """Filter queryset to authenticated user."""

@@ -82,6 +82,7 @@ class ModelTests(TestCase):
             'temp':-124.082778,
             'hr':31.8,
             'hr_interval':300.4,
+            'batt': 100.0,
         }
         data_point = models.DataPoint.objects.create(
             user = user,

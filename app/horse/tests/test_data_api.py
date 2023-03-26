@@ -8,7 +8,7 @@ from django.utils.crypto import get_random_string
 
 from rest_framework import status
 from rest_framework.test import APIClient
-
+from datetime import datetime
 from core.models import Horse, DataPoint
 
 from horse.serializers import DataPointSerializer
@@ -21,22 +21,26 @@ sample_dps=[
      'gps_long': -123.456789,
      'temp': 36.4,
      'hr': 24.1,
-     'hr_interval': 540},
+     'hr_interval': 540,
+     'batt': 55.4},
      {'gps_lat': 345.678901,
      'gps_long': -345.678901,
      'temp': 37.4,
      'hr': 19.9,
-     'hr_interval': 360},
+     'hr_interval': 360,
+     'batt': 25.3},
      {'gps_lat': 456.789012,
      'gps_long': -456.789012,
      'temp': 24.5,
      'hr': 36.2,
-     'hr_interval': 480},
+     'hr_interval': 480,
+     'batt': 29.4},
      {'gps_lat': 567.890123,
      'gps_long': -567.890123,
      'temp': 33.2,
      'hr': 25.6,
-     'hr_interval': 300}
+     'hr_interval': 300, 
+     'batt': 25.3}
 ]
 
 def detail_url(datapoint_id):
@@ -102,7 +106,6 @@ class PrivateDataPointApiTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertEqual(len(res.data), 2)
         self.assertEqual(res.data[0]['api_key'], horse1.api_key)
-        self.assertEqual(res.data[0]['name'], horse1.name)
         for i, dp in enumerate(dp_data):
             res_dict = dict(res.data[i])
             for key, value in dp.items():
@@ -110,7 +113,7 @@ class PrivateDataPointApiTests(TestCase):
 
     def test_update_datapoint(self):
         """Test updating a datapoint."""
-        payload={**sample_dps[2]}
+        payload={**sample_dps[1]}
         horse1 = create_horse(self.user, "Sample Horse 1")
         dp1 = create_dp(self.user, horse1, sample_dps[0])
         url = detail_url(dp1.id)
@@ -118,7 +121,7 @@ class PrivateDataPointApiTests(TestCase):
 
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         dp1.refresh_from_db()
-        for key, value in sample_dps[2].items():
+        for key, value in sample_dps[1].items():
             self.assertEqual(getattr(dp1, key).__float__(), float(value))
 
     def test_delete_datapoint(self):
@@ -144,4 +147,34 @@ class PrivateDataPointApiTests(TestCase):
                 self.assertEqual(res_data[key], value)
             else:
                 self.assertEqual(float(res_data[key]), value)
+    
+    def test_filter_by_date_and_api_key(self):
+        """Test filtering datapoints by horse and date."""
+        horse1 = create_horse(self.user, "Sample Horse 1")
+        dp_data = [sample_dps[0], sample_dps[1], sample_dps[2], sample_dps[3]]
+        dps = []
+        for dp in dp_data:
+            dps.append(create_dp(self.user, horse1, dp))
+
+        dates = ["2023-03-17T23:59:59.000", 
+                 "2023-03-18T23:59:59.000", 
+                 "2023-03-19T23:59:59.000", 
+                 "2023-03-20T23:59:59.000"]
+        for i, dp in enumerate(dps):
+            dp.date_created = datetime.fromisoformat(dates[i])
+            dp.save()
+        horse2 = create_horse(user=self.user, name="BAD BAD HORSE")
+        create_dp(self.user, horse2, sample_dps[0])
+
+        params = {
+            'horse__api_key': horse1.api_key,
+            'date_created__gt': '2023-03-19',
+        }
+        
+        res = self.client.get(DATAPOINT_URL, params)
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(res.data), 2)
+
+        for dp in res.data:
+            self.assertEqual(dp['api_key'], horse1.api_key)
 

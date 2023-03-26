@@ -5,6 +5,7 @@ import uuid
 import os
 
 from django.utils.crypto import get_random_string
+from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.db import models
@@ -69,7 +70,7 @@ class Horse(models.Model):
     )
     name = models.CharField(max_length=255)
     api_key = models.CharField(max_length=12, unique=True, default=get_random_string(length=12))
-    image = models.ImageField(null=True, upload_to=horse_image_file_path)
+    image = models.ImageField(null=True, upload_to=horse_image_file_path, blank=True, default=None)
 
     def __str__(self):
         return self.name+" "+self.api_key
@@ -95,12 +96,13 @@ class DataPoint(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         default=get_default_user)
-    date_created = models.DateTimeField(auto_now_add=True)
+    date_created = models.DateTimeField(default=timezone.now)
     gps_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     gps_long = models.DecimalField(max_digits=9, decimal_places=6, null=True)
     temp = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     hr = models.DecimalField(max_digits=5, decimal_places=2, null=True)
     hr_interval = models.DecimalField(max_digits=7, decimal_places=2, null=True)
+    batt = models.DecimalField(max_digits=5, decimal_places=2, null=True)
 
     def __str__(self):
         return self.api_key+" "+self.name+" "+str(self.date_created)

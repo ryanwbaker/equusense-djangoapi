@@ -187,6 +187,7 @@ class PrivateHorseAPITests(TestCase):
         self.assertTrue(Horse.objects.filter(id=horse.id).exists())
 
 
+
 class ImageUploadTests(TestCase):
     def setUp(self):
         self.client = APIClient()
