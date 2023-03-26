@@ -7,7 +7,7 @@
 
 # Python
 app/__pycache__/
-app/*/__pycache/
+app/*/__pycache__/
 app/*/*/__pycache__/
 app/*/*/*/__pycache__/
 .env/
