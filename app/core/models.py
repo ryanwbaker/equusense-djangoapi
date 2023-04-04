@@ -3,7 +3,7 @@ Database models.
 """
 import uuid
 import os
-
+from functools import partial
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -69,7 +69,7 @@ class Horse(models.Model):
         on_delete=models.CASCADE
     )
     name = models.CharField(max_length=255)
-    api_key = models.CharField(max_length=12, unique=True, default=get_random_string(length=12))
+    api_key = models.CharField(max_length=12, unique=True, default=partial(get_random_string, length=12))
     image = models.ImageField(null=True, upload_to=horse_image_file_path, blank=True, default=None)
 
     def __str__(self):
