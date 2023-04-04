@@ -32,6 +32,7 @@ urlpatterns = [
     ),
     path('api/user/', include('user.urls')),
     path('api/horse/', include('horse.urls')),
+    path('', include('userinterface.urls')),
 ]
 
 if settings.DEBUG:

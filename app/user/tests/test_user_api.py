@@ -28,7 +28,7 @@ class PublicUserApiTests(TestCase):
     def test_create_user_success(self):
         """Test creating a user is successful."""
         payload = {
-            'email': 'test@example.com',
+            'email': 'dude@example.com',
             'password': 'testpass123',
             'name': 'Test Name',
         }
@@ -42,7 +42,7 @@ class PublicUserApiTests(TestCase):
     def test_user_with_email_exists_error(self):
         """Test error returned if user with email exists."""
         payload = {
-            'email': 'test@example.com',
+            'email': 'dude@example.com',
             'password': 'testpass123',
             'name': 'Test Name',
         }
@@ -96,7 +96,7 @@ class PublicUserApiTests(TestCase):
 
     def test_create_token_email_not_found(self):
         """Test error returned if user not found for given email."""
-        payload = {'email': 'test@example.com', 'password': 'pass123'}
+        payload = {'email': 'dude@example.com', 'password': 'pass123'}
         res = self.client.post(TOKEN_URL, payload)
 
         self.assertNotIn('token', res.data)
@@ -104,7 +104,7 @@ class PublicUserApiTests(TestCase):
             
     def test_create_token_blank_password(self):
         """Test posting a blank password returns an error."""
-        payload = {'email': 'test@example.com', 'password': ''}
+        payload = {'email': 'dude@example.com', 'password': ''}
         res = self.client.post(TOKEN_URL, payload)
 
         self.assertNotIn('token', res.data)
@@ -122,7 +122,7 @@ class PrivateUserApiTests(TestCase):
 
     def setUp(self):
         self.user = create_user(
-            email='test@example.com',
+            email='dude@example.com',
             password='testpass123',
             name='Test Name',
         )

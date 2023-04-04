@@ -1,0 +1,141 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="{% static '/css/login-styles.css' %}">
+<link rel="shortcut icon" type="image/png" href="{% static '/img/favicon.ico' %}"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/css/bootstrap.min.css" integrity="sha384-zCbKRCUGaJDkqS1kPbPd7TveP5iyJE0EjAuZQTgFLD2ylzuqKfdKlfG/eSrtxUkn" crossorigin="anonymous">
+<title>Equusense</title>
+</head>
+<body onload="refreshMainState()">
+<div class="spacer-div"></div>
+<div class="main-div">
+  <div class="imgcontainer">
+      <img src="{% static '/img/equusense_logo.png' %}" alt="Avatar" class="avatar">
+  </div>
+  <div>
+    <div class="login-page" style="display: block;">
+      <form method="post" id="login-form" onsubmit="window.login();">
+        {% csrf_token %}
+
+        <div class="container">
+          <label for="email"><b>Email</b></label>
+          <input type="text" placeholder="Enter Email" name="email" id="email" required>
+          <label for="password"><b>Password</b></label>
+          <input type="password" placeholder="Enter Password" name="password" id="password" required>
+              
+          <input type="submit" id="login-button" value="Login">
+        </div>
+      </form>
+    </div>
+    <div class="main-page" style="display: none;">
+      <div>
+        <h2 id="welcome">This is the main page</h2>
+        <h3 style="padding: 0px 15px;">My Horses</h3>
+        <div id="button-group"></div>
+      </div>
+      <div style="margin-top: 10px;">
+        <button id="logout-1" onclick="logout()">Logout</button>
+      </div>
+    </div>
+    <div class="data-page" style="display: none;">
+      <div>
+        <div id="data-header"><h2>This is the Data page</h2></div>
+        <div id="back-to-horses"><button onclick="deactivateHorse()">Back</button></div>
+            <!-- Accordion -->
+        <div class="container">
+          <div class="row">
+              <div class="col-lg-12 mx-auto">
+                  <!-- Accordion -->
+                  <div id="accordion1" class="accordion shadow">
+
+                      <!-- Accordion item 1 -->
+                      <div class="card">
+                          <div id="headingOne" class="card-header bg-white shadow-sm border-0">
+                              <h6 class="mb-0 font-weight-bold"><a href="#" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne" class="d-block position-relative collapsed expanded text-dark text-uppercase collapsible-link py-2" id="last_time">Latest</a></h6>
+                          </div>
+                          <div id="collapseOne" aria-labelledby="headingOne" data-parent="#accordion1" class="collapse show">
+                              <div class="row align-items-center justify-content-center">
+                                  <div class="card-body d-flex align-items-center justify-content-center" style="width: 100%;">
+                                      <div id="batt" class="font-weight-bold card-header bg-white border-0" style="width: 100%;"></div>
+                                  </div>
+                                  <div class="card-body d-flex align-items-center justify-content-center" style="width: 100%;">
+                                      <div id="statusMessage" class="font-weight-bold card-header bg-white border-0" style="width: 100%;"></div>
+                                  </div>
+                                  <div class=class="card-body d-flex align-items-center justify-content-center">
+                                      <div id="tempGauge" style="width:350px; height:350px;"></div>
+                                  </div>
+                                  <div class="card-body d-flex align-items-center justify-content-center">
+                                      <div id="hrGauge" style="width:350px; height:350px;"></div>
+                                  </div>
+                                  <div class="card-body d-flex align-items-center justify-content-center">
+                                      <div class="w-100">
+                                          <h5 class="text-center">Current Location</h5>
+                                          <iframe id="gps_map" src="about:blank" height="350" width="100%" frameborder="0" scrolling="no"></iframe>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- Accordion item 2 -->
+                      <div class="card">
+                          <div id="headingTwo" class="card-header bg-white shadow-sm border-0">
+                              <h6 class="mb-0 font-weight-bold"><a href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo" class="d-block position-relative collapsed text-dark text-uppercase collapsible-link py-2">Historical</a></h6>
+                          </div>
+                          <div id="collapseTwo" aria-labelledby="headingTwo" data-parent="#accordion1" class="collapse show">
+                              <div class="card-body d-flex align-items-center justify-content-center">
+                                  <div id="tempTimeSeries"></div>
+                              </div>
+                              <div class="card-body d-flex align-items-center justify-content-center">
+                                  <div id="hrTimeSeries"></div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+      </div>
+      <div>
+        <button id="back-button">Back</button>
+        <div style="margin-top: 10px;">
+          <button id="logout-2" onclick="logout()">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Footer Start -->
+<footer>
+  <h3>
+      <br>
+  </h3>
+
+  <div id="footer-links">
+      <div class="organization">
+          <a href="https://github.com/ryanbakerucalgary/equusense-djangoapi" target="_blank">
+              <img src="{% static '/img/github.png' %}" alt="GitHub" style="width:75px">
+          </a>
+      </div>
+      <div class="organization">
+          <a href="https://www.aws.amazon.com" target="_blank">
+              <img src="{% static '/img/aws.png' %}" style="width:100px">
+          </a>
+      </div>
+      <div class="organization">
+          <a href="https://www.ucalgary.ca" target="_blank">
+              <img src="{% static '/img/uc-horz-rgb.png' %}" style="width:200px">
+          </a>
+      </div>
+  </div>
+</footer>
+<!-- End Footer -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"            integrity="sha384-fQybjgWLrvvRgtW6bFlB7jaZrFsaBXjsOMm/tB9LTS58ONXgqbR9W8oWht/amnpF" crossorigin="anonymous">
+</script>
+<script src="{% static '/js/login.js' %}"></script>
+</body>
+</html>

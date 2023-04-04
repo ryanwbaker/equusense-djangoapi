@@ -1,6 +1,7 @@
 """
 Views for the horse APIs.
 """
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import (
     viewsets,
     mixins,
@@ -13,7 +14,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import (
     DjangoFilterBackend,
-    DateFromToRangeFilter
 )
 
 from core.models import (
@@ -83,6 +83,7 @@ class DataPointViewSet(mixins.CreateModelMixin,
         """Filter queryset to authenticated user."""
         return self.queryset.filter(user=self.request.user).order_by('-id')
     
+    @csrf_exempt
     def perform_create(self, serializer):
         # Get the horse associated with the API key
         horse = get_horse_from_api_key(self.request.data['api_key'])

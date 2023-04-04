@@ -1,0 +1,205 @@
+    /* Author: Ryan Baker */
+    
+    body {
+        overflow: auto;
+        background: linear-gradient(to bottom, #e2e2e2, #ffffff);
+        font-family: Tahoma, sans-serif;
+        font-size: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    /* Headers Style */
+    
+    h1 {
+        text-align: center;
+        font-size: 5em;
+        color: #fff;
+        text-shadow: 0px 1px 2px #000;
+        flex-grow: 1;
+        margin: 20px 50px;
+    }
+    /* h2 {
+        text-align: left;
+        background-color: #555 !important;
+        font-size: 3em;
+        color: white !important;
+        text-shadow: 0px 1px 1px #000;
+        padding-left: 10px;
+        width: 100%;
+    } */
+    
+    h3 {
+        text-align: center;
+        font-size: 2em;
+        color: #fff;
+        background: #555;
+        padding-left: 5px;
+    }
+    /* Image top of the menu */
+    
+    .section {
+        width: 100%
+    }
+    /* Text boxes style */
+    
+    .messagebox {
+        width: 80%;
+        height: 200px;
+        background-color: white;
+        position: relative;
+        left: 120px;
+        line-height: 1.5em;
+        padding: 25px;
+        margin-bottom: 50px;
+        border-left: 5px solid #007E30;
+    }
+    /* Text boxes style in hover */
+    
+    .messagebox:hover {
+        box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+    }
+    /* Default shadow style */
+    
+    .shadow {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+        transition: all 0.3s cubic-bezier(.25, .8, .25, 1);
+    }
+    /*Main Menu Style*/
+    
+    ul.menu {
+        background: #fff;
+        width: 300px;
+        z-index: 3;
+        margin: 0px;
+        padding: 0px;
+        list-style: none;
+        overflow: hidden;
+    }
+    
+    .menu li a {
+        padding-left: 15px;
+        height: 40px;
+        line-height: 40px;
+        display: block;
+        overflow: hidden;
+        position: relative;
+        text-decoration: none;
+        font-size: 15px;
+        color: #686868;
+    }
+    
+    .menu li a:hover {
+        background: #efefef;
+        border-left: 5px solid #007E30;
+    }
+    /*Table Style*/
+    
+    .Tbl {
+        width: 70%;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+        font-size: 10px;
+    }
+    /* Final Tite (Wash Your Hands) */
+    
+    #WashHandsTxt {
+        color: lightgrey;
+        font-size: 8em;
+        text-align: center;
+    }
+    /*.:.:.:.:.:.:.:.:.:.:.:.:.:.:.:.:.:.*/
+    
+    .top-container {
+        margin: auto;
+    }
+    
+    #footer-links {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        flex-wrap: wrap;
+    }
+    
+    .organization {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+        align-items: center;
+        margin: 20px 10px;
+    }
+    
+    .main-div {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin: 0 auto;
+        width: 100%
+    }
+    #welcome {
+        height: 100%;
+        color: #000;
+    }
+    .menu-container {
+        padding: 40px 20px;
+        margin: 0 auto;
+    }
+    
+    .chart-area {
+        display: flex;
+        flex-direction: column;
+        max-width: 900px;
+        margin: auto;
+        flex-grow: 1;
+        align-items: stretch;
+        width: 100%;
+    }
+    
+    .chart-area img {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    footer {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: wrap;
+    }
+    /* Horizontal line */
+    
+    .collapsible-link::before {
+        content: '';
+        width: 14px;
+        height: 2px;
+        background: #333;
+        position: absolute;
+        top: calc(50% - 1px);
+        right: 1rem;
+        display: block;
+        transition: all 0.3s;
+    }
+    /* Vertical line */
+    
+    .collapsible-link::after {
+        content: '';
+        width: 2px;
+        height: 14px;
+        background: #333;
+        position: absolute;
+        top: calc(50% - 7px);
+        right: calc(1rem + 6px);
+        display: block;
+        transition: all 0.3s;
+    }
+    
+    .collapsible-link[aria-expanded='true']::after {
+        transform: rotate(90deg) translateX(-1px);
+    }
+    
+    .collapsible-link[aria-expanded='true']::before {
+        transform: rotate(180deg);
+    }
+
+    
