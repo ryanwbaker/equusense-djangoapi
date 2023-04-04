@@ -37,3 +37,7 @@ Django Based API for Equusense Hardware-Client Interface Communications
   ![](README5.png)
 
   - All endpoints that require authentication can now be interactively tested.
+
+  ## Connecting to EC2 Instance
+  - Once you have an Amazon AWS account, the command to connect to the server is:<br>
+  `ssh id_rsa ec2-user@{ec2-ip-address}` where ec2-ip-address is the public ip address of your ec2 instance, and `id_rsa` is the rsa key of the instance (you will need to perform a `ssh-add` command to generate this).
